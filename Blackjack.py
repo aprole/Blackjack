@@ -189,7 +189,10 @@ if __name__== '__main__':
                 else:
                     result = 1
 
-            elif not dealer_hand.is_blackjack():
+            elif dealer_hand.is_blackjack():
+                result = 0
+
+            else:
                 if max(dealer_hand.point_value()) > max(player_hand.point_value()):
                     result = 0
                 elif max(player_hand.point_value()) > max(dealer_hand.point_value()):
