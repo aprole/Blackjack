@@ -55,11 +55,14 @@ class Bankroll():
         return self._bal
 
 def dealer_hit(hand, deck):
-    print("Dealer hits")
     hand.append(deck.pop())
 
-def dealer_stand():
-    print("Dealer stands")
+def print_dealer_stand():
+    print_status('Dealer stands')
+
+def print_status(status, sleep_time = 1.5):
+    print(status)
+    sleep(sleep_time)
 
 if __name__== '__main__':
     
@@ -85,37 +88,32 @@ if __name__== '__main__':
         player_hand = hands[1]
 
         player_turn = True
+        dealer_hit_last_turn = False
 
         # Single Round
         while True:
             # Clear screen
             print('\n'*100, title)
             
-            # Print the dealer's hand
             print("Dealer:")
             dealer_hand.print(not player_turn)
-
-            # Print dealer hand value if it's the dealer's turn
-            #if not player_turn:
-            #    print('Hand Value: ', ':'.join(str(p) for p in dealer_hand.point_value()))
 
             print("You:")
             player_hand.print()
 
-            # Print player hand value
-            #print('Hand Value: ', ':'.join(str(p) for p in player_hand.point_value()))
+            # Print if dealer hit in last turn
+            if not player_turn and dealer_hit_last_turn:
+                print_status('Dealer hits!')
 
             # Player's turn
             if player_turn:
                 # Check for bust
                 if player_hand.is_bust():
-                    print('You Bust!')
-                    sleep(1.5)
+                    print_status('You Bust!')
                     player_turn = False
                     continue  
                 elif player_hand.is_blackjack():
-                    print('Black Jack!')
-                    sleep(1.5)
+                    print_status('You have Blackjack!')
                     player_turn = False
                     continue     
 
@@ -132,79 +130,80 @@ if __name__== '__main__':
                 
                 # if stand, let dealer take turn
                 else:
-                    print('You stand')
-                    sleep(1)
-                    print('Dealer\'s turn...')
-                    sleep(1.5)
+                    print_status('You stand')
+                    print_status('Dealer\'s turn...')
                     player_turn = False
                     continue
 
             # Dealer's turn
             else:
-                # If player has blackjack and dealer does too, it's a push, otherwise player wins
+                dealer_hit_last_turn = False
+
+                # If player has blackjack
                 if player_hand.is_blackjack():
                     break
 
                 # Check for bust
-                if dealer_hand.is_bust():
-                    print('Dealer Busts!')
+                elif dealer_hand.is_bust():
+                    print_status('Dealer Busts!')
                     break
 
                 elif dealer_hand.is_blackjack():
-                    print('Dealer has Black Jack!')
+                    print_status('Dealer has Blackjack!')
                     break       
-
-                sleep(1.5)
 
                 # If soft hand
                 if dealer_hand.point_value()[1] > 0:
                     if max(dealer_hand.point_value()) < 19:
                         dealer_hit(dealer_hand, deck)
+                        dealer_hit_last_turn = True
                     else:
-                        dealer_stand()
+                        print_dealer_stand()
                         break # Stand
 
                 # If hand value is 17 or higher, then stand
                 elif max(dealer_hand.point_value()) >= 17:
-                    dealer_stand()
+                    print_dealer_stand()
                     break # Stand
 
                 # Check player's upcard
                 elif player_hand.cards[0].point_value() <= 6 and dealer_hand.point_value()[0] >= 13:
-                    dealer_stand()
+                    print_dealer_stand()
                     break # Stand
                 
                 else:
                     dealer_hit(dealer_hand, deck)
+                    dealer_hit_last_turn = True
 
-        # End of round. Determine winner
+        
 
-        # 0 = dealer win
-        # 1 = player win
-        # 2 = push
-        result = 0
+        if not (dealer_hand.is_bust() or player_hand.is_bust()):
+            # End of round. Determine winner
+            # 0 = dealer win
+            # 1 = player win
+            # 2 = push
+            if player_hand.is_blackjack():
+                # If dealer has blackjack, it's a push
+                if dealer_hand.is_blackjack():
+                    result = 2
+                else:
+                    result = 1
 
-        if player_hand.is_blackjack():
-            # If dealer has blackjack, it's a push
-            if dealer_hand.is_blackjack():
-                result = 2
-            else:
-                result = 1
-        elif not dealer_hand.is_blackjack():
-            if max(dealer_hand.point_value()) > max(player_hand.point_value()):
-                result = 0
-            elif max(player_hand.point_value()) > max(dealer_hand.point_value()):
-                result = 1
-            elif max(player_points) == max(dealer_points):
-                result = 2
+            elif not dealer_hand.is_blackjack():
+                if max(dealer_hand.point_value()) > max(player_hand.point_value()):
+                    result = 0
+                elif max(player_hand.point_value()) > max(dealer_hand.point_value()):
+                    result = 1
+                elif max(player_points) == max(dealer_points):
+                    result = 2
 
-        if result == 0:
-            print("You lose!")
-            print(troll)
-        elif result == 1:
-            print("You won!")
-        else:
-            print("Push!")
+            if result == 0:
+                print("Dealer wins!")
+                print(troll)
+            elif result == 1:
+                print("You win!")
+            elif result == 2:
+                print("Push!")
 
         # Print new line
         print()
@@ -217,6 +216,7 @@ if __name__== '__main__':
 
         if ans == 'n':
             break
+
         else:
             # Add cards back to deck
             deck += player_hand.cards
