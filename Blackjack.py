@@ -1,6 +1,7 @@
 import random
 from PlayingCards import *
 from time import sleep
+import sys
 
 title = """
 ██████╗ ██╗      █████╗  ██████╗██╗  ██╗     ██╗ █████╗  ██████╗██╗  ██╗
@@ -29,11 +30,12 @@ troll = """
 ░░░░░░░░░░░░░░▀▄▄▄▄▄░░░░░█
 """
 
+SLEEP_TIME = 2
+
 class Player():
     def __init__(self, name):
         self.name = name
-        self.bankroll = Bankroll()
-        self.hand = []
+        self.bankroll = Bankroll(2000)
 
 class InsufficientFundsExceptions(Exception):
     pass
@@ -56,13 +58,28 @@ class Bankroll():
 
 def dealer_hit(hand, deck):
     hand.append(deck.pop())
+    print_round_info('Dealer hits')
+    sleep(SLEEP_TIME)
 
 def print_dealer_stand():
-    print_status('Dealer stands')
+    print_round_info('Dealer stands')
+    sleep(SLEEP_TIME)
 
-def print_status(status, sleep_time = 1.5):
-    print(status)
-    sleep(sleep_time)
+def print_round_info(status = ''):
+    # Clear screen
+    print('\n'*100, title)
+    
+    # Print dealer info
+    print("Dealer:")
+    dealer.hand.print(not player_turn)
+    print()
+
+    print("You:")
+    player.hand.print()
+
+    print()
+    sys.stdout.write(status)
+    sys.stdout.flush()
 
 if __name__== '__main__':
     
@@ -70,7 +87,7 @@ if __name__== '__main__':
     dealer = Player("Dealer")
 
     #name = input('Please enter your name: ')
-    #player = Player(name)
+    player = Player('Player')
     
     # Create deck
     deck = generate_deck()
@@ -84,55 +101,51 @@ if __name__== '__main__':
         # Deal
         hands = deal(deck, 2, 2)
 
-        dealer_hand = hands[0]
-        player_hand = hands[1]
+        dealer.hand = hands[0]
+        player.hand = hands[1]
 
         player_turn = True
-        dealer_hit_last_turn = False
 
         # Single Round
         while True:
-            # Clear screen
-            print('\n'*100, title)
-            
-            print("Dealer:")
-            dealer_hand.print(not player_turn)
-
-            print("You:")
-            player_hand.print()
-
-            # Print if dealer hit in last turn
-            if not player_turn and dealer_hit_last_turn:
-                print_status('Dealer hits!')
+            print_round_info()
 
             # Player's turn
             if player_turn:
                 # Check for bust
-                if player_hand.is_bust():
-                    print_status('You Bust!')
+                if player.hand.is_bust():
+                    print_round_info('You Bust!')
+                    sleep(SLEEP_TIME)
                     player_turn = False
-                    continue  
-                elif player_hand.is_blackjack():
-                    print_status('You have Blackjack!')
-                    player_turn = False
-                    continue     
 
-                while True:
-                    ans = input('(H)it or (S)tand? ')
-                    if ans.lower() in ('h', 's'):
-                        break
+                elif player.hand.is_blackjack():
+                    print_round_info('You have Blackjack!')
+                    sleep(SLEEP_TIME)
+                    player_turn = False
+
+                # If still the player's turn, ask to hit or stand
+                if player_turn:
+                    while True:
+                        ans = input('(H)it or (S)tand? ')
+                        if ans.lower() in ('h', 's'):
+                            break
+                        else:
+                            print('invalid response. Please pick \'h\' for hit or \'s\' for stand')
+
+                    # Hit
+                    if ans == 'h':
+                        player.hand.append(deck.pop())
+                    
+                    # if stand, let dealer take turn
                     else:
-                        print('invalid response. Please pick \'h\' for hit or \'s\' for stand')
-
-                # Hit
-                if ans == 'h':
-                    player_hand.append(deck.pop())
-                
-                # if stand, let dealer take turn
-                else:
-                    print_status('You stand')
-                    print_status('Dealer\'s turn...')
-                    player_turn = False
+                        print_round_info('You stand')
+                        sleep(SLEEP_TIME)
+                        player_turn = False
+                        
+                # End player turn
+                if not player_turn:
+                    print_round_info('Dealer\'s turn...')
+                    sleep(SLEEP_TIME)
                     continue
 
             # Dealer's turn
@@ -140,73 +153,73 @@ if __name__== '__main__':
                 dealer_hit_last_turn = False
 
                 # If player has blackjack
-                if player_hand.is_blackjack():
+                if player.hand.is_blackjack():
+                    #sleep(2)
                     break
 
                 # Check for bust
-                elif dealer_hand.is_bust():
-                    print_status('Dealer Busts!')
+                elif dealer.hand.is_bust():
+                    print_round_info('Dealer Busts!')
+                    sleep(SLEEP_TIME)
                     break
 
-                elif dealer_hand.is_blackjack():
-                    print_status('Dealer has Blackjack!')
+                elif dealer.hand.is_blackjack():
+                    print_round_info('Dealer has Blackjack!')
+                    sleep(SLEEP_TIME)
                     break       
 
                 # If soft hand
-                if dealer_hand.point_value()[1] > 0:
-                    if max(dealer_hand.point_value()) < 19:
-                        dealer_hit(dealer_hand, deck)
-                        dealer_hit_last_turn = True
+                if dealer.hand.point_value()[1] > 0:
+                    if max(dealer.hand.point_value()) < 19:
+                        dealer_hit(dealer.hand, deck)
                     else:
                         print_dealer_stand()
                         break # Stand
 
                 # If hand value is 17 or higher, then stand
-                elif max(dealer_hand.point_value()) >= 17:
+                elif max(dealer.hand.point_value()) >= 17:
                     print_dealer_stand()
                     break # Stand
 
                 # Check player's upcard
-                elif player_hand.cards[0].point_value() <= 6 and dealer_hand.point_value()[0] >= 13:
+                elif player.hand.cards[0].point_value() <= 6 and dealer.hand.point_value()[0] >= 13:
                     print_dealer_stand()
                     break # Stand
                 
                 else:
-                    dealer_hit(dealer_hand, deck)
-                    dealer_hit_last_turn = True
-
+                    dealer_hit(dealer.hand, deck)
         
-
-        if not (dealer_hand.is_bust() or player_hand.is_bust()):
-            # End of round. Determine winner
-            # 0 = dealer win
-            # 1 = player win
-            # 2 = push
-            if player_hand.is_blackjack():
+        # End of round. Determine winner
+        # 0 = dealer win
+        # 1 = player win
+        # 2 = push
+        if not (dealer.hand.is_bust() or player.hand.is_bust()):
+            
+            if player.hand.is_blackjack():
                 # If dealer has blackjack, it's a push
-                if dealer_hand.is_blackjack():
+                if dealer.hand.is_blackjack():
                     result = 2
                 else:
                     result = 1
 
-            elif dealer_hand.is_blackjack():
+            elif dealer.hand.is_blackjack():
                 result = 0
 
             else:
-                if max(dealer_hand.point_value()) > max(player_hand.point_value()):
+                if max(dealer.hand.point_value()) > max(player.hand.point_value()):
                     result = 0
-                elif max(player_hand.point_value()) > max(dealer_hand.point_value()):
+                elif max(player.hand.point_value()) > max(dealer.hand.point_value()):
                     result = 1
-                elif max(player_points) == max(dealer_points):
+                elif max(player.hand.point_value()) == max(dealer.hand.point_value()):
                     result = 2
 
             if result == 0:
-                print("Dealer wins!")
+                print_round_info("Dealer wins!")
                 print(troll)
             elif result == 1:
-                print("You win!")
+                print_round_info("You win!")
             elif result == 2:
-                print("Push!")
+                print_round_info("Push!")
 
         # Print new line
         print()
@@ -222,7 +235,7 @@ if __name__== '__main__':
 
         else:
             # Add cards back to deck
-            deck += player_hand.cards
-            del player_hand
-            deck += dealer_hand.cards
-            del dealer_hand
+            deck += player.hand.cards
+            del player.hand
+            deck += dealer.hand.cards
+            del dealer.hand

@@ -76,7 +76,7 @@ class Hand():
 		return self._contains_ace
 
 	def is_blackjack(self):
-		return self._contains_ace and max(self._total_points) == 21
+		return len(self.cards) == 2 and self._contains_ace and max(self._total_points) == 21
 
 	def is_bust(self):
 		return max(self._total_points) > 21
@@ -133,8 +133,6 @@ class Hand():
 		# Print hand value
 		if show_last:
 			print('Hand Value: ', ':'.join(str(p) for p in self.point_value() if p > 0))
-
-		print()
 		
 
 # def print_hand(cards, show_last = True):
@@ -192,6 +190,9 @@ def generate_deck():
 	return deck
 
 def deal(deck, num_hands, num_cards):
+	'''
+		Deals num_hands, each containing num_cards
+	'''
 	hands = []
 	for _ in range(num_hands):
 		cards = []
