@@ -134,7 +134,7 @@ class Hand():
 
 		# Print hand value
 		if not self.hide_last_card:
-			print('Hand Value: ', ':'.join(str(p) for p in self.point_value() if p > 0))
+			print('Hand Value: ', '/'.join(str(p) for p in self.point_value() if p > 0))
 		
 
 # def print_hand(cards, show_last = True):
