@@ -32,6 +32,7 @@ class Hand():
 		self.cards = []
 		self._contains_ace = False
 		self._total_points = [0, 0]
+		self.hide_last_card = False
 
 		for c in cards:
 			self.append(c)
@@ -81,9 +82,9 @@ class Hand():
 	def is_bust(self):
 		return max(self._total_points) > 21
 
-	def print(self, show_last = True):
+	def print(self):
 		''' Prints a visual representation of the cards, side by side overlapping. 
-			Last card will be turned over if show_last == True
+			Last card will be turned over if hide_last == True
 		 '''
 
 		num_cards = len(self.cards)
@@ -98,7 +99,17 @@ class Hand():
 			ranks.append(self.cards[i].rank)
 			suits.append(self.cards[i].suit)
 
-		if show_last:
+		if self.hide_last_card:
+			last_card_lines = ['╭─────────╮',
+							   '│░░░░░░░░░│',
+							   '│░░░░░░░░░│',
+							   '│░░░░░░░░░│',
+							   '│░░░░░░░░░│',
+							   '│░░░░░░░░░│',
+							   '│░░░░░░░░░│',
+							   '│░░░░░░░░░│',
+							   '╰─────────╯']
+		else:
 			last_card = self.cards[-1]
 			last_card_lines = ['╭─────────╮',
 							   '│{:<2}     {:>2}│'.format(last_card.rank, last_card.rank),
@@ -109,16 +120,7 @@ class Hand():
 							   '│{}      {} │'.format(last_card.suit, last_card.suit),
 							   '│{:<2}     {:>2}│'.format(last_card.rank, last_card.rank),
 							   '╰─────────╯']
-		else:
-			last_card_lines = ['╭─────────╮',
-							   '│░░░░░░░░░│',
-							   '│░░░░░░░░░│',
-							   '│░░░░░░░░░│',
-							   '│░░░░░░░░░│',
-							   '│░░░░░░░░░│',
-							   '│░░░░░░░░░│',
-							   '│░░░░░░░░░│',
-							   '╰─────────╯']
+			
 
 		print('╭───' * (num_cards-1) + last_card_lines[0])
 		print(('│{:<2} ' * (num_cards-1)).format(*ranks) + last_card_lines[1])
@@ -131,7 +133,7 @@ class Hand():
 		print('╰───' * (num_cards-1) + last_card_lines[8])
 
 		# Print hand value
-		if show_last:
+		if not self.hide_last_card:
 			print('Hand Value: ', ':'.join(str(p) for p in self.point_value() if p > 0))
 		
 
